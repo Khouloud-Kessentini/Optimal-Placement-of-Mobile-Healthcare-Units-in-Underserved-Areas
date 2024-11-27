@@ -1,4 +1,4 @@
-# Optimal placement of public Wi-Fi hotspots in urban areas
+# Optimal Placement of Public Wi-Fi Hotspots in Urban Areas
 
 This project explores the optimal placement of public Wi-Fi hotspots in urban areas using the Maximal Coverage Location Problem (MCLP) formulation. The goal is to maximize coverage for the population while efficiently allocating limited resources, ensuring equitable access to connectivity.
 
