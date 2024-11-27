@@ -43,7 +43,7 @@ def log_solution_details(solution, x, y, clients, demands, nb_clients, output_lo
         for j in range(nb_clients):
             if solution.get_value(x[j]) > 0.5:
                 nb_facilities += 1
-        log_file.write(f"Total facilities placed: {nb_facilities}\n")
+        log_file.write(f"Total hotspots placed: {nb_facilities}\n")
         log_file.write(f"Total clients covered: {covered_clients}/{nb_clients}\n")
         log_file.write(f"Total demand covered: {solution.objective_value}/{sum(demands)}\n")
         log_file.write(f"Solution status: {solution.solve_status}\n")
@@ -82,32 +82,40 @@ def compute_N(clients, S):
     return N
 
 
-def visualize_coverage(clients, demands, solution, x, y, N):
-
+def visualize_coverage(clients, demands, solution, x, y, N, S):
+    """
+    Visualizes the coverage of facilities and clients, drawing circles to represent the coverage area of facilities.
+    """
     facilities = [i for i in range(len(x)) if solution.get_value(x[i]) > 0.5]
     covered_clients = [i for i in range(len(y)) if solution.get_value(y[i]) > 0.5]
 
     plt.figure(figsize=(12, 10))
     ax = plt.gca()
 
+    # Plot clients
     for i, (x_coord, y_coord) in enumerate(clients):
         if i in covered_clients:
             plt.scatter(x_coord, y_coord, color='blue', s=50, label='Covered Clients' if i == covered_clients[0] else "", alpha=0.7)
         else:
             plt.scatter(x_coord, y_coord, color='gray', s=50, label='Uncovered Clients' if i == 0 else "", alpha=0.5)
-        plt.text(x_coord + 0.5, y_coord + 0.5, f"{demands[i]}", fontsize=8, color='black')
+        #plt.text(x_coord + 0.5, y_coord + 0.5, f"{demands[i]}", fontsize=8, color='black')
 
-
+    # Plot facilities and their coverage circles
     for f in facilities:
-        plt.scatter(clients[f][0], clients[f][1], color='red', s=120, marker='^', label='Selected Facilities' if f == facilities[0] else "")
-    
-    plt.title('Facility Coverage Visualization', fontsize=14)
+        plt.scatter(clients[f][0], clients[f][1], color='red', s=120, marker='^', label='Placed Wifi Hotspots' if f == facilities[0] else "")
+        
+        # Draw coverage circle
+        circle = plt.Circle((clients[f][0], clients[f][1]), S, color='red', fill=False, linestyle='--', alpha=0.5)
+        ax.add_artist(circle)
+
+    plt.title('Optimal Placement of Wifi-Hotspots', fontsize=14)
     plt.xlabel('X Coordinate', fontsize=12)
     plt.ylabel('Y Coordinate', fontsize=12)
     plt.legend(loc='upper right', fontsize=10)
     plt.grid(alpha=0.3)
     ax.set_aspect('equal', adjustable='datalim')
     plt.show()
+
 
 
 
@@ -135,27 +143,13 @@ def mclp_cplex(coords_file_path, demands_file_path, p, S, output_file_path, outp
         model.add_constraint(model.sum(x[j] for j in N[i]) >= y[i])
         model.add_constraint(y[i] <= model.sum(x[j] for j in N[i]))
 
-
-    model.parameters.simplex.tolerances.feasibility.set(1e-9) #1e-9 est le threshold
-    model.parameters.mip.tolerances.absmipgap.set(0)
-    model.parameters.mip.tolerances.mipgap.set(0)
-    model.parameters.mip.tolerances.integrality = 1e-9
-    model.context.solver.log_output = True
-    model.parameters.mip.tolerances.uppercutoff.set(cplex.infinity)
-    model.parameters.mip.tolerances.lowercutoff.set(-cplex.infinity)
-
-    print("CPLEX Parameters Set:")
-    print("Feasibility Tolerance:", model.parameters.simplex.tolerances.feasibility)
-    print("MIP Gap Tolerance:", model.parameters.mip.tolerances.mipgap)
-    print("Integrality Tolerance:", model.parameters.mip.tolerances.integrality)
-
     solution = model.solve(log_output=True)
     if solution:
         selected_points = log_solution_details(solution, x, y, clients, demands, nb_clients, output_log_file)
         relative_gap = solution.solve_details.mip_relative_gap
-        print(f"Relative gap: {relative_gap:.16f}")
+        #print(f"Relative gap: {relative_gap:.16f}")
         write_selected_nodes(output_file_path, selected_points)
-        visualize_coverage(clients, demands, solution, x, y, N)
+        visualize_coverage(clients, demands, solution, x, y, N, S)
     else:
         print("No solution was found.")
     
@@ -163,13 +157,9 @@ def mclp_cplex(coords_file_path, demands_file_path, p, S, output_file_path, outp
         log_file.write("Finished running the MCLP model.\n")
 
 
-SJC818_hashTable = {150: [80, 90, 100, 120, 140, 160, 200, 273], 200: [80, 90, 100, 120, 140, 150, 160, 170, 180, 190, 200, 273]}  
-SJC500_hashTable = {150: [40, 50, 60, 70, 80, 100, 130, 167], 200: [40, 50, 60, 70, 80, 100, 130, 167]} 
-SJC324_hashTable = {150: [20, 30, 40, 50, 60, 80, 108], 200: [20, 30, 40, 50, 60, 80, 108]}  
-
+SJC818_hashTable = {200: [70]}  
 instance = "SJC818_hashTable"
 instance_data = SJC818_hashTable
-print("aaaa", 'input/{instance[:6]}.dat')
 
 
 for S in instance_data:
