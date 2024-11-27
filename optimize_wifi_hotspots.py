@@ -166,5 +166,5 @@ for S in instance_data:
     for p in instance_data[S]:
         print("S =", S)
         print("p =", p)
-        mclp_cplex(f'input/{instance[:6]}.dat', f'input/demand-{instance[:6]}.dat', p, S, f'output/mclp-selected-points/mclp-{instance[:6]}-p{p}-S{S}', f'output/mclp-log-files/mclp-{instance[:6]}-p{p}-S{S}')
+        mclp_cplex(f'input/{instance[:6]}.dat', f'input/demand-{instance[:6]}.dat', p, S, f'selected-points-mclp-{instance[:6]}-p{p}-S{S}', f'cplex-log-{instance[:6]}-p{p}-S{S}')
 
